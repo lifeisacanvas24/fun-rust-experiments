@@ -1,54 +1,50 @@
-# Awesome List CLI Browser
+# 🦀 Fun Rust Experiments
 
-A command-line interface (CLI) application to browse and interact with the [Awesome List](https://github.com/sindresorhus/awesome) directly from your terminal.
+[![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Features
+Welcome to my playground of Rust experiments! This repository is a collection of fun and interesting projects built while exploring the Rust programming language. 🚀
 
-- Fetch and parse the Awesome List README from GitHub
-- Display a navigable list of topics and sub-topics
-- Search functionality to filter topics
-- Open links directly in your default web browser
-- User-friendly terminal UI with keyboard navigation
+## 📚 Projects
 
-## Installation
+### 1. [Awesome CLI Browser](./awesome-cli-list)
 
-1. Ensure you have Rust installed on your system. If not, you can install it from [https://www.rust-lang.org/](https://www.rust-lang.org/).
+A command-line interface browser for exploring curated lists of awesome tools and resources. Built with Rust, this CLI tool helps you discover and navigate through various "awesome" lists right from your terminal!
 
-2. Clone this repository:
+#### Features:
 
-3. Build the project:
+- 🔍 Browse awesome lists interactively
+- ⚡ Fast and efficient navigation
+- 💻 Terminal-friendly interface
+- 🎯 Easy-to-use commands
 
-4. The executable will be available in the `target/release` directory.
+## 🔮 Coming Soon
 
-## Usage
+Stay tuned! More exciting Rust experiments are in the pipeline:
 
-Run the application:
+- 🎮 Game development projects
+- 🛠️ System utilities
+- 🌐 Network tools
+- ...and many more surprises!
 
-### Navigation
+## 🤝 Contributing
 
-- Use `Up` and `Down` arrow keys to navigate through the list
-- Press `Enter` to open the selected link in your default web browser
-- Use `Tab` to toggle visibility of sub-links
-- Type to search and filter the list
-- Press `Esc` to show the quit dialog
+Feel free to contribute to any of the projects or suggest new experiment ideas! Here's how you can contribute:
 
-## Dependencies
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-- `comrak`: For parsing Markdown content
-- `crossterm`: For terminal manipulation and event handling
-- `ratatui`: For creating the terminal user interface
-- `reqwest`: For making HTTP requests
-- `tokio`: For asynchronous runtime
-- `webbrowser`: For opening URLs in the default web browser
+## 📝 License
 
-## TODO
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-1. Add sub-links right in the terminal so users can land on appropriate topics
+## 🌟 Support
 
-## Contributing
+If you find these projects interesting or useful, please consider giving them a star! ⭐
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+---
 
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
+<p align="center">Made with ❤️ and Rust</p>
