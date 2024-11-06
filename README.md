@@ -22,9 +22,10 @@ A command-line interface browser for exploring curated lists of awesome tools an
 
 Stay tuned! More exciting Rust experiments are in the pipeline:
 
-- 🎮 Game development projects
+- CLI help full tools
 - 🛠️ System utilities
 - 🌐 Network tools
+- Rust + Python based web framework
 - ...and many more surprises!
 
 ## 🤝 Contributing
