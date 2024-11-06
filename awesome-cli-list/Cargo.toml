@@ -1,0 +1,19 @@
+[package]
+name = "awesome-cli-list"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ratatui = { version = "0.23.0", features = ["all-widgets"]}
+reqwest = { version = "0.12.9", features = ["json", "blocking"] }
+tokio = { version = "1", features = ["full"] }
+comrak = "0.29"
+webbrowser = "1.0.2" # for opening links in the default browser
+crossterm = "0.28.1"
+
+# [dependencies]
+# comrak = "0.29"
+# crossterm = "0.26"
+# reqwest = { version = "0.11", features = ["blocking", "json"] } # HTTP client (blocking for simplicity)
+# ratatui = "0.23.0"
+# tokio = { version = "1", features = ["full"] }
