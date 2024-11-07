@@ -1,0 +1,12 @@
+[package]
+name = "task_manager_tui"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ratatui = "0.29.0"
+crossterm = "0.28.1"
+tokio = { version = "1.41.0", features = ["full"] }
+rusqlite = { version = "0.32.1", features = ["bundled"] }
+color-eyre = "0.6.3"
+fuzzy-matcher = "0.3.7"
