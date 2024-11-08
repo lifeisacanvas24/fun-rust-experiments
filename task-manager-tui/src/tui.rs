@@ -1,3 +1,4 @@
+
 use color_eyre::Result;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
@@ -41,7 +42,7 @@ impl Tui {
         Ok(())
     }
 
-    pub async fn run(&mut self, mut app: App, db: Database) -> Result<()> {
+    pub async fn run(&mut self, app: &mut App, db: &Database) -> Result<()> {
         let tick_rate = Duration::from_millis(250);
         let mut last_tick = Instant::now();
 
@@ -54,9 +55,11 @@ impl Tui {
 
             if event::poll(timeout)? {
                 if let Event::Key(key) = event::read()? {
-                    match key.code {
-                        KeyCode::Char('q') => return Ok(()),
-                        _ => app.handle_input(key, &db),
+                    if let Err(err) = app.handle_input(key, db) {
+                        app.show_error(format!("Error: {}", err));
+                    }
+                    if app.should_quit() {
+                        return Ok(());
                     }
                 }
             }
