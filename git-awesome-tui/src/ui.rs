@@ -10,6 +10,12 @@ use ratatui::{
 use std::io::{self, stdout, Write};
 
 pub fn start_ui(categories: Vec<Category>) {
+    // Filter out the "Uncategorized" category
+    let categories: Vec<Category> = categories
+        .into_iter()
+        .filter(|category| category.title != "Uncategorized")
+        .collect();
+
     // Configure the terminal for raw mode and alternate screen
     terminal::enable_raw_mode().unwrap();
     let mut stdout = stdout();
