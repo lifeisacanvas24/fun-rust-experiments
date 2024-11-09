@@ -1,5 +1,5 @@
-use crate::data::{Category, Subcategory};
-use crossterm::{cursor, event, execute, terminal, ExecutableCommand};
+use crate::data::{Category, Link, Subcategory};
+use crossterm::{cursor, event, execute, terminal};
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
@@ -7,7 +7,7 @@ use ratatui::{
     style::{Color, Style},
     widgets::{Block, Borders, List, ListItem, Paragraph},
 };
-use std::io::{self, stdout, Write};
+use std::io::{self, stdout};
 
 pub fn start_ui(categories: Vec<Category>) {
     // Filter out the "Uncategorized" category
@@ -31,81 +31,75 @@ pub fn start_ui(categories: Vec<Category>) {
     let mut terminal = Terminal::new(backend).unwrap();
 
     let mut selected_category = 0;
-    let mut selected_subcategory = 0;
-    let mut selected_link = 0;
     let mut quitting = false;
 
     loop {
-        terminal.draw(|f| {
-            // Clear the terminal background to avoid seeing previous frame artifacts
-            let size = f.size();
-            let clear_block = Block::default().style(Style::default().bg(Color::Reset));
-            f.render_widget(clear_block, size);
+        terminal
+            .draw(|f| {
+                // Clear the terminal background to avoid seeing previous frame artifacts
+                let size = f.size();
+                let clear_block = Block::default().style(Style::default().bg(Color::Reset));
+                f.render_widget(clear_block, size);
 
-            // Layout configuration
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([
-                    Constraint::Percentage(10), // Search Bar
-                    Constraint::Percentage(80), // Main Content
-                    Constraint::Percentage(10), // Help Bar
-                ])
-                .split(f.size());
+                // Layout configuration
+                let chunks = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([
+                        Constraint::Percentage(10), // Search Bar
+                        Constraint::Percentage(80), // Main Content
+                        Constraint::Percentage(10), // Help Bar
+                    ])
+                    .split(f.size());
 
-            // Render Search Bar
-            let search_bar = Paragraph::new("Search: (Not Implemented)")
-                .block(Block::default().borders(Borders::ALL).title("Search"));
-            f.render_widget(search_bar, chunks[0]);
+                // Render Search Bar
+                let search_bar = Paragraph::new("Search: (Not Implemented)")
+                    .block(Block::default().borders(Borders::ALL).title("Search"));
+                f.render_widget(search_bar, chunks[0]);
 
-            // Main Content Layout
-            let main_chunks = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([
-                    Constraint::Percentage(33), // Categories
-                    Constraint::Percentage(33), // Subcategories
-                    Constraint::Percentage(34), // Links
-                ])
-                .split(chunks[1]);
+                // Main Content Layout - Rendering categories in the first column, subcategories or links in the second
+                let main_chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([
+                        Constraint::Percentage(50), // Categories
+                        Constraint::Percentage(50), // Subcategories / Links
+                    ])
+                    .split(chunks[1]);
 
-            render_categories(f, main_chunks[0], &categories, selected_category);
-            render_subcategories(
-                f,
-                main_chunks[1],
-                &categories,
-                selected_category,
-                selected_subcategory,
-            );
-            render_links(
-                f,
-                main_chunks[2],
-                &categories,
-                selected_category,
-                selected_subcategory,
-                selected_link,
-            );
+                render_categories(f, main_chunks[0], &categories, selected_category);
 
-            // Render Help Bar
-            let help_text = Paragraph::new(
-                "Esc - Quit | Tab - View Categories/Links | Enter or Right Arrow - Open Link | Up/Down - Browse Items",
-            )
-            .block(Block::default().borders(Borders::ALL).title("Help"));
-            f.render_widget(help_text, chunks[2]);
+                // Render subcategories or direct links in the second column
+                if let Some(selected_category) = categories.get(selected_category) {
+                    if let Some(subcategories) = &selected_category.subcategories {
+                        if !subcategories.is_empty() {
+                            render_subcategories(f, main_chunks[1], subcategories);
+                        }
+                    } else if let Some(direct_links) = &selected_category.direct_links {
+                        if !direct_links.is_empty() {
+                            render_direct_links(f, main_chunks[1], direct_links);
+                        }
+                    }
+                }
 
-            // Show confirmation dialog if quitting
-            if quitting {
-                let dialog_width = 40;
-                let dialog_height = 7;
-                let x = (size.width - dialog_width) / 2;
-                let y = (size.height - dialog_height) / 2;
+                // Render Help Bar
+                let help_text = Paragraph::new("Esc - Quit | Up/Down - Browse Categories")
+                    .block(Block::default().borders(Borders::ALL).title("Help"));
+                f.render_widget(help_text, chunks[2]);
 
-                let confirm_msg = Paragraph::new("Are you sure you want to quit? (y/n)")
-                    .block(Block::default().borders(Borders::ALL).title("Confirm Quit"))
-                    .style(Style::default().fg(Color::Yellow));
+                // Show confirmation dialog if quitting
+                if quitting {
+                    let dialog_width = 40;
+                    let dialog_height = 7;
+                    let x = (size.width - dialog_width) / 2;
+                    let y = (size.height - dialog_height) / 2;
 
-                f.render_widget(confirm_msg, Rect::new(x, y, dialog_width, dialog_height));
-            }
-        })
-        .unwrap();
+                    let confirm_msg = Paragraph::new("Are you sure you want to quit? (y/n)")
+                        .block(Block::default().borders(Borders::ALL).title("Confirm Quit"))
+                        .style(Style::default().fg(Color::Yellow));
+
+                    f.render_widget(confirm_msg, Rect::new(x, y, dialog_width, dialog_height));
+                }
+            })
+            .unwrap();
 
         // Handle user input
         if quitting {
@@ -119,9 +113,6 @@ pub fn start_ui(categories: Vec<Category>) {
         } else {
             if let Some(input) = handle_input() {
                 match input.as_str() {
-                    "tab" => {
-                        // Logic to switch between columns
-                    }
                     "up" => {
                         // Move up logic with boundary checks
                         if selected_category > 0 {
@@ -133,9 +124,6 @@ pub fn start_ui(categories: Vec<Category>) {
                         if selected_category < categories.len() - 1 {
                             selected_category += 1;
                         }
-                    }
-                    "enter" | "right" => {
-                        // Open link
                     }
                     "esc" => {
                         quitting = true; // Trigger the confirmation dialog
@@ -161,6 +149,10 @@ fn render_categories(f: &mut Frame, area: Rect, categories: &[Category], selecte
     let items: Vec<ListItem> = categories
         .iter()
         .enumerate()
+        .filter(|(_, category)| {
+            // Only show categories that either have subcategories or directly contain links
+            category.subcategories.is_some() || category.direct_links.is_some()
+        })
         .map(|(i, category)| {
             let content = if i == selected {
                 format!("> {}", category.title)
@@ -179,84 +171,38 @@ fn render_categories(f: &mut Frame, area: Rect, categories: &[Category], selecte
     f.render_widget(list, area);
 }
 
-fn render_subcategories(
-    f: &mut Frame,
-    area: Rect,
-    categories: &[Category],
-    selected_category: usize,
-    selected_subcategory: usize,
-) {
-    if let Some(subcategories) = categories.get(selected_category).map(|c| &c.subcategories) {
-        let items: Vec<ListItem> = subcategories
-            .iter()
-            .enumerate()
-            .map(|(i, subcategory)| {
-                let content = if i == selected_subcategory {
-                    format!("> {}", subcategory.title)
-                } else {
-                    format!("  {}", subcategory.title)
-                };
-                ListItem::new(content).style(if i == selected_subcategory {
-                    Style::default().fg(Color::Yellow)
-                } else {
-                    Style::default()
-                })
-            })
-            .collect();
+// Function to render subcategories
+fn render_subcategories(f: &mut Frame, area: Rect, subcategories: &[Subcategory]) {
+    let items: Vec<ListItem> = subcategories
+        .iter()
+        .map(|subcategory| ListItem::new(subcategory.title.clone()))
+        .collect();
 
-        let list = List::new(items).block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Subcategories"),
-        );
-        f.render_widget(list, area);
-    }
+    let list = List::new(items).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title("Subcategories"),
+    );
+    f.render_widget(list, area);
 }
 
-fn render_links(
-    f: &mut Frame,
-    area: Rect,
-    categories: &[Category],
-    selected_category: usize,
-    selected_subcategory: usize,
-    selected_link: usize,
-) {
-    if let Some(links) = categories
-        .get(selected_category)
-        .and_then(|category| category.subcategories.get(selected_subcategory))
-        .map(|subcategory| &subcategory.links)
-    {
-        let items: Vec<ListItem> = links
-            .iter()
-            .enumerate()
-            .map(|(i, link)| {
-                let content = if i == selected_link {
-                    format!("> {}", link.title)
-                } else {
-                    format!("  {}", link.title)
-                };
-                ListItem::new(content).style(if i == selected_link {
-                    Style::default().fg(Color::Yellow)
-                } else {
-                    Style::default()
-                })
-            })
-            .collect();
+// Function to render links
+fn render_direct_links(f: &mut Frame, area: Rect, links: &[Link]) {
+    let items: Vec<ListItem> = links
+        .iter()
+        .map(|link| ListItem::new(link.title.clone()))
+        .collect();
 
-        let list = List::new(items).block(Block::default().borders(Borders::ALL).title("Links"));
-        f.render_widget(list, area);
-    }
+    let list = List::new(items).block(Block::default().borders(Borders::ALL).title("Direct Links"));
+    f.render_widget(list, area);
 }
 
 pub fn handle_input() -> Option<String> {
     if let Ok(event) = event::read() {
         if let event::Event::Key(key_event) = event {
             return match key_event.code {
-                event::KeyCode::Tab => Some("tab".to_string()),
                 event::KeyCode::Up => Some("up".to_string()),
                 event::KeyCode::Down => Some("down".to_string()),
-                event::KeyCode::Enter => Some("enter".to_string()),
-                event::KeyCode::Right => Some("right".to_string()),
                 event::KeyCode::Esc => Some("esc".to_string()),
                 event::KeyCode::Char(c) if c == 'y' || c == 'n' => Some(c.to_string()),
                 _ => None,
