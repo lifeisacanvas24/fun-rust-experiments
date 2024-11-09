@@ -27,6 +27,7 @@ pub fn start_ui(categories: Vec<Category>) {
     let mut selected_category = 0;
     let mut selected_subcategory = 0;
     let mut selected_link = 0;
+    let mut quitting = false;
 
     loop {
         terminal.draw(|f| {
@@ -83,25 +84,46 @@ pub fn start_ui(categories: Vec<Category>) {
             )
             .block(Block::default().borders(Borders::ALL).title("Help"));
             f.render_widget(help_text, chunks[2]);
+
+            // Show confirmation dialog if quitting
+            if quitting {
+                let confirm_msg = Paragraph::new("Are you sure you want to quit? (y/n)")
+                    .block(Block::default().borders(Borders::ALL).title("Confirm Quit"))
+                    .style(Style::default().fg(Color::Yellow));
+                f.render_widget(confirm_msg, Rect::new(10, 5, 40, 7));
+            }
         })
         .unwrap();
 
-        if let Some(input) = handle_input() {
-            match input.as_str() {
-                "tab" => {
-                    // Logic to switch between columns
+        // Handle user input
+        if quitting {
+            if let Some(input) = handle_input() {
+                match input.as_str() {
+                    "y" => break,            // Quit the application
+                    "n" => quitting = false, // Cancel the quit
+                    _ => {}
                 }
-                "up" => {
-                    // Move up logic with boundary checks
+            }
+        } else {
+            if let Some(input) = handle_input() {
+                match input.as_str() {
+                    "tab" => {
+                        // Logic to switch between columns
+                    }
+                    "up" => {
+                        // Move up logic with boundary checks
+                    }
+                    "down" => {
+                        // Move down logic with boundary checks
+                    }
+                    "enter" | "right" => {
+                        // Open link
+                    }
+                    "esc" => {
+                        quitting = true; // Trigger the confirmation dialog
+                    }
+                    _ => {}
                 }
-                "down" => {
-                    // Move down logic with boundary checks
-                }
-                "enter" | "right" => {
-                    // Open link
-                }
-                "esc" => break,
-                _ => {}
             }
         }
     }
