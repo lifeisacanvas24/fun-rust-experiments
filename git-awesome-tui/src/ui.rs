@@ -7,10 +7,21 @@ use ratatui::{
     style::{Color, Style},
     widgets::{Block, Borders, List, ListItem, Paragraph},
 };
-use std::io::{stdout, Write};
+use std::io::{self, stdout, Write};
 
 pub fn start_ui(categories: Vec<Category>) {
-    let backend = CrosstermBackend::new(stdout());
+    // Configure the terminal for raw mode and alternate screen
+    terminal::enable_raw_mode().unwrap();
+    let mut stdout = stdout();
+    execute!(
+        stdout,
+        terminal::EnterAlternateScreen,
+        terminal::Clear(terminal::ClearType::All),
+        cursor::Hide
+    )
+    .unwrap();
+
+    let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend).unwrap();
 
     let mut selected_category = 0;
@@ -19,6 +30,12 @@ pub fn start_ui(categories: Vec<Category>) {
 
     loop {
         terminal.draw(|f| {
+            // Clear the terminal background to avoid seeing previous frame artifacts
+            let size = f.size();
+            let clear_block = Block::default().style(Style::default().bg(Color::Reset));
+            f.render_widget(clear_block, size);
+
+            // Layout configuration
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
@@ -28,7 +45,7 @@ pub fn start_ui(categories: Vec<Category>) {
                 ])
                 .split(f.size());
 
-            // Search Bar
+            // Render Search Bar
             let search_bar = Paragraph::new("Search: (Not Implemented)")
                 .block(Block::default().borders(Borders::ALL).title("Search"));
             f.render_widget(search_bar, chunks[0]);
@@ -60,13 +77,14 @@ pub fn start_ui(categories: Vec<Category>) {
                 selected_link,
             );
 
-            // Help Bar
+            // Render Help Bar
             let help_text = Paragraph::new(
                 "Esc - Quit | Tab - View Categories/Links | Enter or Right Arrow - Open Link | Up/Down - Browse Items",
             )
             .block(Block::default().borders(Borders::ALL).title("Help"));
             f.render_widget(help_text, chunks[2]);
-        }).unwrap();
+        })
+        .unwrap();
 
         if let Some(input) = handle_input() {
             match input.as_str() {
@@ -87,6 +105,16 @@ pub fn start_ui(categories: Vec<Category>) {
             }
         }
     }
+
+    // Restore terminal to its normal state
+    terminal::disable_raw_mode().unwrap();
+    execute!(
+        io::stdout(),
+        terminal::LeaveAlternateScreen,
+        terminal::Clear(terminal::ClearType::All),
+        cursor::Show
+    )
+    .unwrap();
 }
 
 fn render_categories(f: &mut Frame, area: Rect, categories: &[Category], selected: usize) {
@@ -177,24 +205,6 @@ fn render_links(
 
         let list = List::new(items).block(Block::default().borders(Borders::ALL).title("Links"));
         f.render_widget(list, area);
-    }
-}
-
-// Clears the terminal screen and moves the cursor to the top-left corner.
-fn clear_terminal() {
-    let mut stdout = stdout();
-    execute!(
-        stdout,
-        terminal::Clear(terminal::ClearType::All),
-        cursor::MoveTo(0, 0)
-    )
-    .unwrap();
-}
-
-// Opens a URL in the default web browser.
-pub fn open_link(link: &str) {
-    if webbrowser::open(link).is_err() {
-        eprintln!("Failed to open URL: {}", link);
     }
 }
 
