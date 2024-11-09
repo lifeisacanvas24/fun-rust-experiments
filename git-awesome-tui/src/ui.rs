@@ -118,9 +118,15 @@ pub fn start_ui(categories: Vec<Category>) {
                     }
                     "up" => {
                         // Move up logic with boundary checks
+                        if selected_category > 0 {
+                            selected_category -= 1;
+                        }
                     }
                     "down" => {
                         // Move down logic with boundary checks
+                        if selected_category < categories.len() - 1 {
+                            selected_category += 1;
+                        }
                     }
                     "enter" | "right" => {
                         // Open link
