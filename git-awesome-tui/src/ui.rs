@@ -87,10 +87,16 @@ pub fn start_ui(categories: Vec<Category>) {
 
             // Show confirmation dialog if quitting
             if quitting {
+                let dialog_width = 40;
+                let dialog_height = 7;
+                let x = (size.width - dialog_width) / 2;
+                let y = (size.height - dialog_height) / 2;
+
                 let confirm_msg = Paragraph::new("Are you sure you want to quit? (y/n)")
                     .block(Block::default().borders(Borders::ALL).title("Confirm Quit"))
                     .style(Style::default().fg(Color::Yellow));
-                f.render_widget(confirm_msg, Rect::new(10, 5, 40, 7));
+
+                f.render_widget(confirm_msg, Rect::new(x, y, dialog_width, dialog_height));
             }
         })
         .unwrap();
@@ -240,6 +246,7 @@ pub fn handle_input() -> Option<String> {
                 event::KeyCode::Enter => Some("enter".to_string()),
                 event::KeyCode::Right => Some("right".to_string()),
                 event::KeyCode::Esc => Some("esc".to_string()),
+                event::KeyCode::Char(c) if c == 'y' || c == 'n' => Some(c.to_string()),
                 _ => None,
             };
         }
