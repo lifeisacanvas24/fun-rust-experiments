@@ -176,16 +176,19 @@ fn render_categories(
     let start_index = page * items_per_page;
     let end_index = std::cmp::min(start_index + items_per_page, categories.len());
 
+    // Ensure the selected index is within the visible range
+    let adjusted_selected = std::cmp::min(selected, end_index - start_index - 1);
+
     let items: Vec<ListItem> = categories[start_index..end_index]
         .iter()
         .enumerate()
         .map(|(i, category)| {
-            let content = if i == selected {
+            let content = if i == adjusted_selected {
                 format!("> {}", category.title)
             } else {
                 format!("  {}", category.title)
             };
-            ListItem::new(content).style(if i == selected {
+            ListItem::new(content).style(if i == adjusted_selected {
                 Style::default().fg(Color::Yellow)
             } else {
                 Style::default()
@@ -193,7 +196,10 @@ fn render_categories(
         })
         .collect();
 
-    let list = List::new(items).block(Block::default().borders(Borders::ALL).title("Categories"));
+    let list = List::new(items)
+        .block(Block::default().borders(Borders::ALL).title("Categories"))
+        .highlight_style(Style::default().fg(Color::Yellow));
+
     f.render_widget(list, area);
 }
 
